@@ -11,10 +11,6 @@ podTemplate(label: 'cassandra-deploy', containers: [
 ],
         volumes: [ hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config') ],
 ) {
-    properties([
-            pipelineTriggers([]),
-            parameters([])
-    ])
 
  ansiColor('xterm') {
 
