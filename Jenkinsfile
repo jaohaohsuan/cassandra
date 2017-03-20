@@ -13,7 +13,7 @@ podTemplate(label: 'cassandra-deploy', containers: [
 ) {
     properties([
             pipelineTriggers([]),
-            parameters([]),
+            parameters([])
     ])
 
  ansiColor('xterm') {
