@@ -16,15 +16,20 @@ podTemplate(label: 'cassandra-deploy', containers: [
             parameters([]),
     ])
 
-    node('cassandra-deploy') {
+ ansiColor('xterm') {
 
-        checkout scm
-        container('kubectl') {
+     node('cassandra-deploy') {
 
-            stage('deploy') {
-                sh "kubectl apply -f cassandra-service.yaml"
-            }
+         checkout scm
+         container('kubectl') {
 
-        }
-    }
+             stage('deploy') {
+                 sh "kubectl apply -f cassandra-service.yaml"
+             }
+
+         }
+     }
+
+  }
+
 }
