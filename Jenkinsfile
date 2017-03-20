@@ -28,6 +28,12 @@ podTemplate(label: 'cassandra-deploy', containers: [
 
              stage('validate') {
                  sh 'kubectl get pods -l="app=cassandra"'
+                 timeout(5) {
+                    waitUntil {
+                        def r = sh script: 'kubectl exec cassandra-0 -- nodetool status', returnStatus: true
+                        return (r == 0)
+                    }
+                 }
              }
 
          }
