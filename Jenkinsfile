@@ -24,7 +24,9 @@ podTemplate(label: 'cassandra-deploy', containers: [
          container('kubectl') {
 
              stage('deploy') {
+                 echo "create a service to track all cassandra statefulset nodes"
                  sh "kubectl apply -f cassandra-service.yaml"
+                 sh "kubectl get svc cassandra"
              }
 
          }
