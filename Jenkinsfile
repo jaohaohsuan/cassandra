@@ -11,7 +11,8 @@ podTemplate(label: 'cassandra-deploy', containers: [
         containerTemplate(name: 'sbt',
                 image: 'henryrao/sbt:211',
                 ttyEnabled: true,
-                command: 'cat')
+                command: 'cat',
+		alwaysPullImage: true)
 ],
         volumes: [ hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config') ],
 ) {
