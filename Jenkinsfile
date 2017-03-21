@@ -44,6 +44,10 @@ podTemplate(label: 'cassandra-deploy', containers: [
          container('sbt') {	 
              stage('test') {
                  sh 'pwd'        
+		 sh 'ls -al'
+		 dir('test/akka-persistence') {
+		   sh "sbt 'compile'"
+		 }
              }
 	 }
      }
