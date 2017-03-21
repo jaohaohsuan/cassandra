@@ -26,9 +26,11 @@ podTemplate(label: 'cassandra-deploy', containers: [
 
                 stage('deploy') {
                     echo "create a service to track all cassandra statefulset nodes"
-                    sh "kubectl apply -f cassandra-service.yaml"
-                    sh "kubectl get svc cassandra"
-                    sh "kubectl apply -f cassandra-statefulset.yaml"
+                    sh """
+                        kubectl apply -f cassandra-service.yaml
+                        kubectl get svc cassandra
+                        kubectl apply -f cassandra-statefulset.yaml
+                    """
                 }
 
                 stage('validate') {
@@ -43,14 +45,19 @@ podTemplate(label: 'cassandra-deploy', containers: [
 
             }
             container('sbt') {
-                stage('test') {
-                    sh """
-                    cd test/akka-persistence
-    
-                    sbt -Dcassandra-journal.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" \
-                        -Dcassandra-snapshot-store.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" \
-                    'run'
-                 """
+                stage('setup') {
+                    parallel (
+                            "akka-persistence": {
+                                sh """
+                                    cd test/akka-persistence
+                    
+                                    sbt -Dcassandra-journal.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" \
+                                        -Dcassandra-snapshot-store.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" \
+                                    'run'
+                                    """
+                            }
+                    )
+
                 }
             }
         }
