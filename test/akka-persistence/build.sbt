@@ -8,6 +8,7 @@ lazy val root = (project in file(".")).
     scalaVersion         := "2.11.8",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-persistence-cassandra" % "0.23",
-      "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaV
+      "com.typesafe.akka" %% "akka-persistence-query-experimental" % akkaV,
+      "ch.qos.logback"    % "logback-classic"              % "1.1.7"
     )
   )
