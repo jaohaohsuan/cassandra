@@ -19,11 +19,6 @@ podTemplate(label: 'cassandra-deploy', containers: [
                 persistentVolumeClaim(claimName: 'jenkins-ivy2', mountPath: '/home/jenkins/.ivy2', readOnly: false)
         ]
 ) {
-    properties([
-            pipelineTriggers([]),
-            parameters([])
-    ])
-
     node('cassandra-deploy') {
 
         checkout scm
