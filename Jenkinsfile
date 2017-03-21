@@ -8,6 +8,10 @@ podTemplate(label: 'cassandra-deploy', containers: [
                 image: 'henryrao/kubectl:1.5.2',
                 ttyEnabled: true,
                 command: 'cat'),
+        containerTemplate(name: 'sbt',
+                image: 'henryrao/sbt:211',
+                ttyEnabled: true,
+                command: 'cat')
 ],
         volumes: [ hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config') ],
 ) {
@@ -37,6 +41,11 @@ podTemplate(label: 'cassandra-deploy', containers: [
              }
 
          }
+         container('sbt') {	 
+             stage('test') {
+                 sh 'pwd'        
+             }
+	 }
      }
 
   }
