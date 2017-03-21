@@ -20,37 +20,38 @@ podTemplate(label: 'cassandra-deploy', containers: [
         ]
 ) {
     node('cassandra-deploy') {
+        ansiColor('xterm') {
+            checkout scm
+            container('kubectl') {
 
-        checkout scm
-        container('kubectl') {
+                stage('deploy') {
+                    echo "create a service to track all cassandra statefulset nodes"
+                    sh "kubectl apply -f cassandra-service.yaml"
+                    sh "kubectl get svc cassandra"
+                    sh "kubectl apply -f cassandra-statefulset.yaml"
+                }
 
-            stage('deploy') {
-                echo "create a service to track all cassandra statefulset nodes"
-                sh "kubectl apply -f cassandra-service.yaml"
-                sh "kubectl get svc cassandra"
-                sh "kubectl apply -f cassandra-statefulset.yaml"
-            }
-
-            stage('validate') {
-                sh 'kubectl get pods -l="app=cassandra"'
-                timeout(3) {
-                    waitUntil {
-                        def r = sh script: 'kubectl exec cassandra-0 -- nodetool status', returnStatus: true
-                        return (r == 0)
+                stage('validate') {
+                    sh 'kubectl get pods -l="app=cassandra"'
+                    timeout(3) {
+                        waitUntil {
+                            def r = sh script: 'kubectl exec cassandra-0 -- nodetool status', returnStatus: true
+                            return (r == 0)
+                        }
                     }
                 }
-            }
 
-        }
-        container('sbt') {
-            stage('test') {
-                sh """
+            }
+            container('sbt') {
+                stage('test') {
+                    sh """
                     cd test/akka-persistence
     
                     sbt -Dcassandra-journal.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" \
                         -Dcassandra-snapshot-store.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" \
                     'run'
                  """
+                }
             }
         }
     }
