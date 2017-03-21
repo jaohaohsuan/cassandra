@@ -12,51 +12,55 @@ podTemplate(label: 'cassandra-deploy', containers: [
                 image: 'henryrao/sbt:211',
                 ttyEnabled: true,
                 command: 'cat',
-		alwaysPullImage: true)
+                alwaysPullImage: true)
 ],
-        volumes: [ hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config') ],
+        volumes: [
+                hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config'),
+                persistentVolumeClaim(claimName: 'jenkins-ivy2', mountPath: '/home/jenkins/.ivy2', readOnly: false)
+        ]
 ) {
 
- ansiColor('xterm') {
+    ansiColor('xterm') {
 
-     node('cassandra-deploy') {
+        properties([
+                pipelineTriggers([]),
+                parameters([])
+        ])
 
-         checkout scm
-         container('kubectl') {
+        node('cassandra-deploy') {
 
-             stage('deploy') {
-                 echo "create a service to track all cassandra statefulset nodes"
-                 sh "kubectl apply -f cassandra-service.yaml"
-                 sh "kubectl get svc cassandra"
-                 sh "kubectl apply -f cassandra-statefulset.yaml"
-             }
+            checkout scm
+            container('kubectl') {
 
-             stage('validate') {
-                 sh 'kubectl get pods -l="app=cassandra"'
-                 timeout(3) {
-                    waitUntil {
-                        def r = sh script: 'kubectl exec cassandra-0 -- nodetool status', returnStatus: true
-                        return (r == 0)
+                stage('deploy') {
+                    echo "create a service to track all cassandra statefulset nodes"
+                    sh "kubectl apply -f cassandra-service.yaml"
+                    sh "kubectl get svc cassandra"
+                    sh "kubectl apply -f cassandra-statefulset.yaml"
+                }
+
+                stage('validate') {
+                    sh 'kubectl get pods -l="app=cassandra"'
+                    timeout(3) {
+                        waitUntil {
+                            def r = sh script: 'kubectl exec cassandra-0 -- nodetool status', returnStatus: true
+                            return (r == 0)
+                        }
                     }
-                 }
-             }
+                }
 
-         }
-         container('sbt') {	 
-             stage('test') {
-	         sh """
-		    cd test/akka-persistence
-
-                    sbt 'compile'
+            }
+            container('sbt') {
+                stage('test') {
+                    sh """
+                    cd test/akka-persistence
+    
+                    sbt -Dcassandra-journal.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" run
                  """
-             }
-	     stage('final') {
-	         sh 'pwd'
-		 sh 'ls -al'
-	     }
-	 }
-     }
+                }
+            }
+        }
 
-  }
+    }
 
 }
