@@ -1,6 +1,10 @@
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Cancellable}
 import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
 import akka.persistence.query.PersistenceQuery
+
+import scala.concurrent.duration._
+import scala.concurrent.Await
+import scala.util.{Failure, Success}
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -11,7 +15,17 @@ object Main {
 
     println("Connect to cassandra Journal")
 
-    val readJournal = PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
+    val readJournal: CassandraReadJournal = PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
 
+    def exit = {
+      Await.result(system.terminate(), 3 seconds)
+      System.exit _
+    }
+
+
+    readJournal.session.underlying().onComplete {
+      case Success(_) => exit(0)
+      case Failure(_) => exit(1)
+    }
   }
 }
