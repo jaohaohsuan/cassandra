@@ -55,7 +55,7 @@ podTemplate(label: 'cassandra-deploy', containers: [
                     sh """
                     cd test/akka-persistence
     
-                    sbt -Dcassandra-journal.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" run
+                    sbt -Dcassandra-journal.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" 'run'
                  """
                 }
             }
