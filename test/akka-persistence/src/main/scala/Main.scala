@@ -27,19 +27,13 @@ object Main {
       f recoverWith { case _ if retries > 0 => after(defaultDelay, s)(retry(f, retries - 1 , defaultDelay)) }
     }
 
-    def x = { readJournal.session.underlying() }
+    def cassandraConnected = { readJournal.session.underlying.map { _ => 0 } recover { case _ => 1 } }
 
-    retry(x, 10, 3 seconds).onComplete {
-      case Failure(_) =>
-        system.scheduler.scheduleOnce(5 seconds) {
-          Await.result(system.terminate(), 3 seconds)
-          System.exit(1)
-        }
-      case _ =>
-        system.scheduler.scheduleOnce(5 seconds) {
-          Await.result(system.terminate(), 3 seconds)
-        }
+    val state = Await.result(retry(cassandraConnected, 10, 3 seconds), Duration.Inf)
+
+    system.scheduler.scheduleOnce(5 seconds) {
+      Await.result(system.terminate(), 3 seconds)
+      System.exit(state)
     }
-
   }
 }
