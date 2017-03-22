@@ -46,15 +46,12 @@ podTemplate(label: 'cassandra-deploy', containers: [
             }
             container('sbt') {
                 stage('setup') {
-                    parallel (
-                            "akka-persistence": {
+                    parallel(
+                            "akka-persistence-schema": {
                                 sh """
-                                    cd test/akka-persistence
-                    
-                                    sbt -Dcassandra-journal.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" \
-                                        -Dcassandra-snapshot-store.contact-points.0="cassandra-0.cassandra.default.svc.cluster.local" \
-                                    'run'
-                                    """
+                                   cd test/akka-persistence
+                                   sbt run
+                                   """
                             }
                     )
 
