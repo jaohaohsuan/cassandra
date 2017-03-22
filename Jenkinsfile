@@ -52,6 +52,9 @@ podTemplate(label: 'cassandra-deploy', containers: [
                                    cd test/akka-persistence
                                    sbt run
                                    """
+                            },
+                            "others": {
+                                echo "nothing to do"
                             }
                     )
 
