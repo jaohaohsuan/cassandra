@@ -46,24 +46,17 @@ podTemplate(label: 'cassandra-deploy', containers: [
             }
 
             stage('setup') {
-                container('sbt') {
-                    parallel(
-                            "akka-persistence-schema": {
-                                sh """
-                                   cd test/akka-persistence
-                                   sbt run
-                                   """
-                            },
-                            "others": {
-                                dir('test') {
+                dir('test/akka-persistence') {
+                    container('sbt') {
+                        parallel(
+                                "akka-persistence-schema": {
+                                    sh 'sbt run'
+                                },
+                                "others": {
                                     echo "nothing to do"
-                                    sh """
-ls -al
-pwd
-"""
                                 }
-                            }
-                    )
+                        )
+                    }
                 }
             }
         }
