@@ -22,18 +22,21 @@ podTemplate(label: 'cassandra-deploy', containers: [
     node('cassandra-deploy') {
         ansiColor('xterm') {
             checkout scm
-            container('kubectl') {
 
-                stage('deploy') {
-                    echo "create a service to track all cassandra statefulset nodes"
+
+            stage('deploy') {
+                echo "create a service to track all cassandra statefulset nodes"
+                container('kubectl') {
                     sh """
                         kubectl apply -f cassandra-service.yaml
                         kubectl get svc cassandra
                         kubectl apply -f cassandra-statefulset.yaml
                     """
                 }
+            }
 
-                stage('validate') {
+            stage('validate') {
+                container('kubectl') {
                     sh 'kubectl get pods -l="app=cassandra"'
                     timeout(3) {
                         waitUntil {
@@ -42,8 +45,9 @@ podTemplate(label: 'cassandra-deploy', containers: [
                         }
                     }
                 }
-
             }
+
+
 
             stage('setup') {
                 dir('test/akka-persistence') {
