@@ -19,10 +19,14 @@ object Main {
 
     readJournal.session.underlying().onComplete {
       case Failure(_) =>
-        Await.result(system.terminate(), 3 seconds)
-        System.exit(1)
+        system.scheduler.scheduleOnce(5 seconds) {
+          Await.result(system.terminate(), 3 seconds)
+          System.exit(1)
+        }
       case _ =>
-        Await.result(system.terminate(), 3 seconds)
+        system.scheduler.scheduleOnce(5 seconds) {
+          Await.result(system.terminate(), 3 seconds)
+        }
     }
 
   }
