@@ -27,7 +27,9 @@ object Main {
       f recoverWith { case _ if retries > 0 => after(defaultDelay, s)(retry(f, retries - 1 , defaultDelay)) }
     }
 
-    retry(readJournal.session.underlying, 10, 3 seconds).onComplete {
+    def x = { readJournal.session.underlying() }
+
+    retry(x, 10, 3 seconds).onComplete {
       case Failure(_) =>
         system.scheduler.scheduleOnce(5 seconds) {
           Await.result(system.terminate(), 3 seconds)
