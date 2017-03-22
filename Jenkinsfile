@@ -54,10 +54,15 @@ podTemplate(label: 'cassandra-deploy', containers: [
                                    """
                             },
                             "others": {
-                                echo "nothing to do"
+                                dir('test') {
+                                    echo "nothing to do"
+                                    sh """
+ls -al
+pwd
+"""
+                                }
                             }
                     )
-
                 }
             }
         }
