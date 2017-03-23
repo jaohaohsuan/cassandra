@@ -23,7 +23,6 @@ podTemplate(label: 'cassandra-deploy', containers: [
         ansiColor('xterm') {
             checkout scm
 
-
             stage('deploy') {
                 echo "create a service to track all cassandra statefulset nodes"
                 container('kubectl') {
@@ -46,8 +45,6 @@ podTemplate(label: 'cassandra-deploy', containers: [
                     }
                 }
             }
-
-
 
             stage('setup') {
                 dir('test/akka-persistence') {
