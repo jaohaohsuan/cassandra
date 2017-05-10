@@ -3,26 +3,26 @@ import org.scalatest._
 /**
   * Created by henry on 3/23/17.
   */
-class RetryTerminationDecisionTest extends org.scalatest.FlatSpec with Matchers with RetryTerminationDecision {
+class RetryDecisionTest extends org.scalatest.FlatSpec with Matchers with RetryDecision {
 
   import ProbeService._
-  import RetryTerminationDecision._
 
   var result = 0
 
   def doNothing(): Unit = {}
+  def doNothing2(r: Retry): Unit = {}
 
   def passed(): Unit = { result = -1 }
   def failed(): Unit = { result = 10 }
-  def continue(): Unit = { result = 1 }
+  def continue(r: Retry): Unit = { result = 1 }
 
   "Reset" should "pass" in {
-    determine(Reset, Decision(passed, doNothing, doNothing))()
+    determine(Reset, Decision(passed, doNothing, doNothing2))()
     assert(result == -1)
   }
 
   "Retry(0)" should "fail" in {
-    determine(Retry(0), Decision(doNothing, failed, doNothing))()
+    determine(Retry(0), Decision(doNothing, failed, doNothing2))()
     assert(result == 10)
   }
 

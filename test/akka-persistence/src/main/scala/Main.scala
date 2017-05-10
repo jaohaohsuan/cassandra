@@ -1,11 +1,16 @@
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
+import akka.persistence.cassandra.journal.CassandraJournalConfig
+import akka.persistence.cassandra.query.scaladsl.CassandraReadJournal
+import akka.persistence.query.PersistenceQuery
+import com.datastax.driver.core.Cluster
+import com.typesafe.config.ConfigFactory
+import com.typesafe.scalalogging.LazyLogging
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
+object Main extends App with LazyLogging {
 
-object Main extends App with CassandraProbe with RetryTerminationDecision {
+  val config = ConfigFactory.load()
 
-  import ProbeService._
+  logger.info(s"${config.getStringList("cassandra-journal.contact-points")}")
 
   implicit val system = ActorSystem("system")
 
@@ -13,27 +18,7 @@ object Main extends App with CassandraProbe with RetryTerminationDecision {
 
   //system.actorOf(Props[CassandraProbeActor])
 
-  var retryState = Retry(3)
-
-  def updateRetryState(s: State): Unit = {
-    s match {
-      case r: Retry =>
-        retryState = r
-      case _ =>
-    }
-  }
-
-  val cancellable = system.scheduler.schedule(3 seconds, 2 seconds) {
-
-    probe(retryState).onSuccess {
-      case state =>
-        determine(state, RetryTerminationDecision.Decision(() => { sys.exit(0) }, () => { sys.exit(1) }, () => updateRetryState(state)))()
-    }
-  }
-
-  sys.addShutdownHook {
-    cancellable.cancel()
-    Await.result(system.terminate(), Duration.Inf)
-  }
-
+  //PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
+  //new CassandraJournalConfig(system, system.settings.config.getConfig("cassandra-journal"))
+  //PersistenceQuery(system).readJournalFor[CassandraReadJournal](CassandraReadJournal.Identifier)
 }

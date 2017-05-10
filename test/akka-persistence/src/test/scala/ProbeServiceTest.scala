@@ -20,14 +20,14 @@ class ProbeServiceTest extends FlatSpec with ProbeService[Int] {
   behavior of "ProbeServiceTest"
 
   it should "probe" in {
-    probe(Retry(1)).onSuccess { case state =>
+    probe(target, Retry(1)).onSuccess { case state =>
         assert(state == Reset)
     }
   }
 
   "Probing" should "be failed" in {
     num = 0
-    probe(Retry(1)).onSuccess { case state =>
+    probe(target, Retry(1)).onSuccess { case state =>
       assert(state == Retry(0))
     }
   }

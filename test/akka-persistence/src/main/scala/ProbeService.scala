@@ -1,5 +1,5 @@
 
-import akka.actor.ActorSystem
+import ProbeService.Retry
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -33,26 +33,22 @@ trait ProbeService[T] {
 
   implicit val ec: ExecutionContext
 
-  def target: Future[T]
-
-  def probe(state: Retry): Future[State] = {
-    target.map { _ => Reset } recover { case _ => Retry.decrease(state) }
+  def probe(f: Future[T], state: Retry): Future[State] = {
+    f.map { _ => Reset } recover { case _ => Retry.decrease(state) }
   }
 }
 
-object RetryTerminationDecision {
-  case class Decision(passed: () => Unit, exit: () => Unit, continue: () => Unit)
-}
+case class Decision(passed: () => Unit, exit: () => Unit, continue: Retry => Unit)
 
-trait RetryTerminationDecision {
+trait RetryDecision {
 
   import ProbeService._
 
-  def determine(state: State, decision: RetryTerminationDecision.Decision): () => Unit = {
+  def determine(state: State, decision: Decision): () => Unit = {
     state match {
       case Reset => decision.passed
       case Retry(0) => decision.exit
-      case _ => decision.continue
+      case retry: Retry => () => decision.continue(retry)
     }
   }
 }
