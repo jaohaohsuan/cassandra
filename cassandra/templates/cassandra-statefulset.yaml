@@ -1,19 +1,19 @@
 apiVersion: "apps/v1beta1"
 kind: StatefulSet
 metadata:
-  name: cassandra
+  name: {{ template "fullname" . }}
 spec:
-  serviceName: cassandra
+  serviceName: {{ .Values.service.name }}
   replicas: 1
   template:
     metadata:
       labels:
-        app: cassandra
+        app: {{ template "fullname" . }}
     spec:
       containers:
       - name: cassandra
-        image: gcr.io/google-samples/cassandra:v12
-        imagePullPolicy: IfNotPresent
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
         - containerPort: 7000
           name: intra-node
@@ -24,12 +24,7 @@ spec:
         - containerPort: 9042
           name: cql
         resources:
-          limits:
-            cpu: "500m"
-            memory: 1Gi
-          requests:
-           cpu: "500m"
-           memory: 1Gi
+{{ toYaml .Values.resources | indent 12 }}
         securityContext:
           capabilities:
             add:
@@ -44,7 +39,7 @@ spec:
           - name: HEAP_NEWSIZE
             value: 100M
           - name: CASSANDRA_SEEDS
-            value: "cassandra-0.cassandra.default.svc.cluster.local"
+            value: "{{ template "fullname" . }}-0.{{ .Values.service.name }}.default.svc.cluster.local"
           - name: CASSANDRA_CLUSTER_NAME
             value: "K8Demo"
           - name: CASSANDRA_DC
@@ -73,18 +68,18 @@ spec:
         # but not exactly because the names need to match exactly one of
         # the stateful pod volumes.
         volumeMounts:
-        - name: cassandra-data
+        - name: storage
           mountPath: /cassandra_data
   # These are converted to volume claims by the controller
   # and mounted at the paths mentioned above.
   # do not use these in production until ssd GCEPersistentDisk or other ssd pd
   volumeClaimTemplates:
   - metadata:
-      name: cassandra-data
+      name: storage
       annotations:
         volume.beta.kubernetes.io/storage-class: default
     spec:
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
-          storage: 3Gi
+          storage: 2Gi
