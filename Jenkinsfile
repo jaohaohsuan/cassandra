@@ -2,8 +2,9 @@
 podTemplate(label: 'cassandra-deploy', containers: [
     containerTemplate(name: 'jnlp', image: 'henryrao/jnlp-slave', args: '${computer.jnlpmac} ${computer.name}', alwaysPullImage: true) ],
     volumes: [
-            hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config'),
-            persistentVolumeClaim(claimName: 'helm-repository', mountPath: '/var/helm/repo', readOnly: false)
+      hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock'), 
+      hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config'),
+      persistentVolumeClaim(claimName: 'helm-repository', mountPath: '/var/helm/repo', readOnly: false)
     ]
 ) {
     node('cassandra-deploy') {
