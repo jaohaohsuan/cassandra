@@ -4,63 +4,31 @@ podTemplate(label: 'cassandra-deploy', containers: [
                 image: 'henryrao/jnlp-slave',
                 args: '${computer.jnlpmac} ${computer.name}',
                 alwaysPullImage: true),
-        containerTemplate(name: 'kubectl',
-                image: 'henryrao/kubectl:1.5.2',
-                ttyEnabled: true,
-                command: 'cat'),
         containerTemplate(name: 'sbt',
-                image: 'henryrao/sbt:211',
+                image: 'henryrao/sbt:2.11.8',
                 ttyEnabled: true,
                 command: 'cat',
                 alwaysPullImage: true)
 ],
         volumes: [
                 hostPathVolume(mountPath: '/root/.kube/config', hostPath: '/root/.kube/config'),
-                persistentVolumeClaim(claimName: 'jenkins-ivy2', mountPath: '/home/jenkins/.ivy2', readOnly: false)
+                persistentVolumeClaim(claimName: 'jenkins-ivy2', mountPath: '/home/jenkins/.ivy2', readOnly: false),
+								persistentVolumeClaim(claimName: 'helm-repository', mountPath: '/var/helm/repo', readOnly: false)
         ]
 ) {
     node('cassandra-deploy') {
         ansiColor('xterm') {
             checkout scm
-
-            stage('deploy') {
-                echo "create a service to track all cassandra statefulset nodes"
-                container('kubectl') {
-                    sh """
-                        kubectl apply -f cassandra-service.yaml
-                        kubectl get svc cassandra
-                        kubectl apply -f cassandra-statefulset.yaml
-                    """
+            stage('package') {
+                docker.image('henryrao/helm:2.3.1').inside('') { c ->
+                    sh '''
+                    # packaging
+                    helm package --destination /var/helm/repo cassandra
+                    helm repo index --url https://grandsys.github.io/helm-repository/ --merge /var/helm/repo/index.yaml /var/helm/repo
+                    '''
                 }
-            }
-
-            stage('validate') {
-                container('kubectl') {
-                    sh 'kubectl get pods -l="app=cassandra"'
-                    timeout(3) {
-                        waitUntil {
-                            def r = sh script: 'kubectl exec cassandra-0 -- nodetool status', returnStatus: true
-                            return (r == 0)
-                        }
-                    }
-                }
-            }
-            stage('setup') {
-                dir('test/akka-persistence') {
-                    parallel(
-                            "akka-persistence-schema": {
-                                container('sbt') {
-                                    sh 'sbt test'
-                                    sh 'sbt run'
-                                }
-                            },
-                            "others": {
-                                echo "nothing to do"
-                            }
-                    )
-
-                }
-            }
+                build job: 'helm-repository/master'
+            } 
         }
     }
 
